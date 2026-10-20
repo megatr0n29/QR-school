@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR-Школа: умный портал класса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5fa;--card:#fff;--ink:#12203d;--mute:#64708a;--line:#e1e7f0;--blue:#2350f0;--blue-s:#e6ecff;--route:#ff5a36;--ok:#12a36b;--ok-s:#dcf6ea;--warn:#b7791f;--warn-s:#fff3d6;--r:16px}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{max-width:1080px;margin:auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;margin-right:auto}
+.logo i{width:34px;height:34px;border-radius:10px;background:var(--ink);display:grid;place-items:center}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px;overflow-x:auto;max-width:100%}
+.seg button{padding:7px 12px;border-radius:10px;font-size:.85rem;font-weight:600;color:var(--mute);white-space:nowrap}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(18,32,61,.15)}
+.seg.main button.on{background:var(--blue);color:#fff}
+.roles{width:100%;order:3}
+@media(min-width:900px){.roles{width:auto;order:0}}
+main{max-width:1080px;margin:auto;padding:18px 16px 60px}
+h1{font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:-.03em;line-height:1.15}
+h2{font-size:1.1rem;letter-spacing:-.01em}
+.lead{color:var(--mute);margin:6px 0 18px;max-width:60ch}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr}
+@media(min-width:860px){.g2{grid-template-columns:1.6fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g22{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card h2{margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:.88rem;transition:.15s}
+.chip:hover{border-color:var(--blue)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn{padding:10px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:600;font-size:.92rem;transition:transform .1s,filter .15s}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:scale(.97)}
+.btn.sec{background:var(--blue-s);color:var(--blue)}
+.btn.ghost{background:var(--bg);color:var(--ink)}
+.btn.sm{padding:6px 12px;font-size:.82rem}
+.btn[disabled]{background:var(--ok-s);color:var(--ok);cursor:default;filter:none}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--blue-s);color:var(--blue)}
+.tag.ok{background:var(--ok-s);color:var(--ok)}.tag.warn{background:var(--warn-s);color:var(--warn)}
+label{display:block;font-size:.84rem;font-weight:600;margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:2px solid var(--blue-s)}
+.hidden{display:none!important}
+/* map */
+.map{width:100%;height:auto;display:block;background:#f8fafd;border-radius:12px}
+.room{fill:#e9eef7;stroke:#c9d3e4;stroke-width:1.5;transition:.2s}
+.room.hl{fill:#ffe3dc;stroke:var(--route);stroke-width:2.5}
+.rt{font-size:12.5px;font-weight:600;fill:#40506f;text-anchor:middle;pointer-events:none}
+.route{fill:none;stroke:var(--route);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1000;stroke-dashoffset:1000}
+.route.go{animation:draw 1.3s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pulse{animation:pulse 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(2.2);opacity:0}}
+.info{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:.9rem}
+.info b{display:block;font-size:1.3rem;letter-spacing:-.02em}
+.info span{color:var(--mute);font-size:.8rem}
+/* audio */
+.wave{display:flex;align-items:center;gap:3px;height:46px;margin:12px 0}
+.wave i{flex:1;max-width:6px;background:var(--blue);border-radius:3px;height:8px;opacity:.35}
+.playing .wave i{opacity:1;animation:eq .9s ease-in-out infinite alternate}
+@keyframes eq{from{height:6px}to{height:42px}}
+.time{font-variant-numeric:tabular-nums;font-weight:700}
+.prog{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.prog div{height:100%;width:0;background:var(--blue);transition:width 1s linear}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,18,40,.65);display:grid;place-items:center;padding:14px;z-index:50}
+.modal .box{background:#fff;border-radius:20px;max-width:560px;width:100%;overflow:hidden}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.ar{position:relative;height:340px;background:#0f1930;overflow:hidden;perspective:500px}
+.ar svg.cor{position:absolute;inset:0;width:100%;height:100%}
+.arrow{position:absolute;left:50%;bottom:46px;width:120px;height:140px;margin-left:-60px;transform:rotateX(62deg);transform-origin:50% 100%;animation:fly 1.6s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(255,90,54,.9))}
+.arrow div{width:100%;height:100%;background:linear-gradient(180deg,#ff8a6a,#ff4a21);clip-path:polygon(50% 0,100% 55%,70% 55%,70% 100%,30% 100%,30% 55%,0 55%)}
+@keyframes fly{0%,100%{transform:rotateX(62deg) translateY(0)}50%{transform:rotateX(62deg) translateY(-26px)}}
+.ar .hud{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;gap:8px}
+.hud span{background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:600;backdrop-filter:blur(6px)}
+/* portal */
+.lock{max-width:440px;margin:auto}
+.list{display:grid;gap:12px}
+.hw{display:flex;flex-direction:column;gap:8px}
+.hw .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hw p{color:var(--mute);font-size:.9rem}
+.sub{background:var(--bg);border-radius:12px;padding:12px}
+.cm{font-size:.85rem;background:var(--bg);border-radius:10px;padding:6px 10px;margin-top:6px}
+.cm b{font-weight:700}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1}
+.day{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.day:last-child{border:0}.day .n{width:22px;color:var(--mute);font-weight:700}.day .r{margin-left:auto;color:var(--mute);font-size:.82rem}
+.ann{border-left:4px solid var(--blue);padding:8px 12px;background:var(--bg);border-radius:0 10px 10px 0}
+.ann.imp{border-color:var(--route)}
+.ann small{color:var(--mute)}
+.ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--bg) 0);display:grid;place-items:center;flex:none}
+.ring b{width:70px;height:70px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:1.3rem}
+.dl{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.dl:last-child{border:0}
+.date{width:46px;text-align:center;background:var(--blue-s);color:var(--blue);border-radius:10px;padding:4px 0;font-weight:800;line-height:1.1}
+.date small{display:block;font-size:.65rem;font-weight:600}
+#toasts{position:fixed;left:0;right:0;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:90;pointer-events:none;padding:0 12px}
+.toast{background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:t .25s ease}
+@keyframes t{from{transform:translateY(12px);opacity:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.route{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="logo"><i><svg width="20" height="20" viewBox="0 0 20 20" fill="#fff"><path d="M2 2h6v6H2zM12 2h6v6h-6zM2 12h6v6H2zM12 12h3v3h-3zM16 16h2v2h-2zM12 16h2v2h-2zM16 12h2v2h-2z"/></svg></i>QR-Школа</div>
+  <nav class="seg main" aria-label="Разделы">
+    <button class="on" data-sec="nav">Навигация</button>
+    <button data-sec="portal">Классный портал</button>
+  </nav>
+  <div class="seg roles" id="roles" role="group" aria-label="Роль для демонстрации">
+    <button class="on" data-role="guest">Гость / Новичок</button>
+    <button data-role="student">Ученик (10-ФМ)</button>
+    <button data-role="head">Староста</button>
+    <button data-role="teacher">Учитель</button>
+  </div>
+</div></header>
+
+<main>
+<!-- ============ НАВИГАЦИЯ ============ -->
+<section id="sec-nav">
+  <h1>Найдите нужный кабинет за минуту</h1>
+  <p class="lead">Вы отсканировали QR-код у входа. Выберите, куда идти, и мы построим маршрут.</p>
+  <div class="grid g2">
+    <div>
+      <div class="card">
+        <div class="chips" id="cats"></div>
+        <label for="dest" style="margin-top:0">Или выберите кабинет</label>
+        <select id="dest"></select>
+        <svg class="map" id="map" viewBox="0 0 600 340" role="img" aria-label="Схема первого этажа" style="margin-top:12px"></svg>
+        <div class="info">
+          <div><b id="i-name">—</b><span>Куда</span></div>
+          <div><b id="i-dist">—</b><span>Расстояние</span></div>
+          <div><b id="i-min">—</b><span>Пешком</span></div>
+        </div>
+        <div class="row" style="margin-top:14px;flex-wrap:wrap">
+          <button class="btn" id="btnAR">Показать AR</button>
+          <button class="btn ghost" id="btnClear">Сбросить маршрут</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="audio">
+        <h2>Аудиогид <span class="tag" id="a-tag">Вы здесь</span></h2>
+        <h2 style="font-size:1.25rem" id="a-title">Главный вход</h2>
+        <p id="a-text" style="color:var(--mute);font-size:.92rem"></p>
+        <div class="wave" id="wave" aria-hidden="true"></div>
+        <div class="prog"><div id="a-prog"></div></div>
+        <div class="row" style="justify-content:space-between;margin-top:12px">
+          <button class="btn" id="a-btn">Прослушать аудиогид</button>
+          <span class="time" id="a-time">0:45</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ПОРТАЛ ============ -->
+<section id="sec-portal" class="hidden">
+  <div id="login" class="lock">
+    <h1>Вход в классный портал</h1>
+    <p class="lead">Домашние задания, конспекты и расписание вашего класса.</p>
+    <form class="card" id="loginForm" autocomplete="off">
+      <label for="code">Код класса</label>
+      <input id="code" value="ФМ-10.2026">
+      <label for="who">Ваше имя</label>
+      <select id="who"></select>
+      <label for="pass">Пароль</label>
+      <input id="pass" type="password" placeholder="Для демо — любой пароль">
+      <p id="loginErr" style="color:#c62828;font-size:.85rem;margin-top:8px"></p>
+      <button class="btn" style="width:100%;margin-top:12px">Войти</button>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;margin-bottom:12px">
+      <div><h1 id="hello">Привет!</h1><p class="lead" style="margin:2px 0 0" id="who-line"></p></div>
+      <button class="btn ghost sm" id="logout">Выйти</button>
+    </div>
+    <div class="seg" id="ptabs" style="margin-bottom:16px;display:inline-flex">
+      <button class="on" data-p="hw">Домашние задания</button>
+      <button data-p="notes">Конспекты</button>
+      <button data-p="news">Объявления и расписание</button>
+      <button data-p="stats">Статистика и дедлайны</button>
+    </div>
+
+    <div id="p-hw">
+      <div class="row" id="teacherBar" style="margin-bottom:12px"><button class="btn" id="newHw">Опубликовать новое ДЗ</button></div>
+      <form class="card hidden" id="hwForm" style="margin-bottom:14px">
+        <h2>Новое задание</h2>
+        <label for="hs">Предмет</label><select id="hs"><option>Алгебра</option><option>Физика</option><option>Литература</option></select>
+        <label for="ht">Задание</label><textarea id="ht" rows="2" required placeholder="Например: §14, задачи 3–8"></textarea>
+        <label for="hd">Срок сдачи</label><input id="hd" type="date" required>
+        <div class="row" style="margin-top:12px"><button class="btn">Опубликовать</button><button type="button" class="btn ghost" id="hwCancel">Отмена</button></div>
+      </form>
+      <div class="list g3 grid" id="hwList"></div>
+    </div>
+
+    <div id="p-notes" class="hidden"><div class="grid g3" id="noteList"></div></div>
+
+    <div id="p-news" class="hidden"><div class="grid g22">
+      <div class="card">
+        <h2>Объявления</h2>
+        <div class="list" id="annList"></div>
+        <form id="annForm" class="row hidden" style="margin-top:12px"><input id="annIn" placeholder="Новое объявление для класса" required><button class="btn sm">Опубликовать</button></form>
+      </div>
+      <div class="card">
+        <h2>Расписание</h2>
+        <div class="chips" id="days"></div>
+        <div id="sched"></div>
+      </div>
+    </div></div>
+
+    <div id="p-stats" class="hidden"><div class="grid g22">
+      <div class="card">
+        <h2>Статистика класса</h2>
+        <div class="row" style="gap:16px">
+          <div class="ring" id="ring"><b id="ringN">0%</b></div>
+          <div><b style="font-size:1.05rem">ДЗ сдано вовремя</b><p style="color:var(--mute);font-size:.88rem" id="ringS"></p></div>
+        </div>
+        <div class="sub" style="margin-top:14px"><span style="color:var(--mute);font-size:.8rem">Самый популярный конспект</span><br><b id="topNote"></b></div>
+      </div>
+      <div class="card"><h2>Календарь дедлайнов</h2><div id="dlList"></div></div>
+    </div></div>
+  </div>
+</section>
+</main>
+
+<!-- AR -->
+<div class="modal hidden" id="arModal" role="dialog" aria-modal="true" aria-label="AR-навигация">
+  <div class="box">
+    <div class="mh"><h2>AR-навигация</h2><button class="btn ghost sm" id="arClose">Закрыть</button></div>
+    <div class="ar">
+      <svg class="cor" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a6e"/><stop offset="1" stop-color="#1b2745"/></linearGradient></defs>
+        <rect width="400" height="340" fill="#223156"/>
+        <polygon points="0,0 400,0 250,110 150,110" fill="#2d3d63"/>
+        <polygon points="0,0 150,110 150,230 0,340" fill="#31446f"/>
+        <polygon points="400,0 250,110 250,230 400,340" fill="#2a3b66"/>
+        <polygon points="150,230 250,230 400,340 0,340" fill="url(#fl)"/>
+        <rect x="150" y="110" width="100" height="120" fill="#e9eefc" opacity=".92"/>
+        <polygon points="20,40 120,100 120,215 20,290" fill="#8fa5d6" opacity=".55"/>
+        <polygon points="380,40 280,100 280,215 380,290" fill="#8fa5d6" opacity=".55"/>
+        <polygon points="105,125 140,140 140,215 105,215" fill="#ffd36b" opacity=".85"/>
+        <polygon points="295,125 260,140 260,215 295,215" fill="#9fe3c4" opacity=".85"/>
+        <polygon points="190,230 210,230 290,340 110,340" fill="rgba(255,255,255,.07)"/>
+      </svg>
+      <div class="hud"><span id="ar-to">Конференц-зал</span><span id="ar-d">38 м</span></div>
+      <div class="arrow"><div></div></div>
+    </div>
+    <p style="padding:12px 16px;color:var(--mute);font-size:.88rem">Демонстрация: так будет выглядеть подсказка поверх камеры телефона. Идите прямо по коридору.</p>
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;$('#toasts').append(e);setTimeout(()=>e.remove(),2800)}
+
+/* ---------- КАРТА ---------- */
+const ME={x:60,y:190};
+const PLACES={
+ lib:{n:'Библиотека',cat:'lib',x:20,y:20,w:150,h:130,door:[95,150],t:'Тихий зал на 40 мест. Выдача книг с 8:30 до 16:30, есть зона для групповой работы.'},
+ conf:{n:'Конференц-зал',cat:'room',x:180,y:20,w:150,h:130,door:[255,150],t:'Здесь проходят собрания, олимпиады и защиты проектов. Вместимость — 80 человек.'},
+ phys:{n:'Кабинет физики №204',cat:'room',x:340,y:20,w:150,h:130,door:[415,150],t:'Лаборатория с оборудованием для опытов по механике и электричеству. Вход только со сменной обувью.'},
+ wc:{n:'Туалеты',cat:'wc',x:500,y:20,w:80,h:130,door:[540,150],t:'Туалеты на первом этаже. Мужской и женский — напротив друг друга, есть доступ для маломобильных.'},
+ cafe:{n:'Столовая',cat:'cafe',x:180,y:230,w:190,h:90,door:[275,230],t:'Горячие обеды и буфет. Большая перемена — после третьего урока. Оплата картой школьника.'},
+ gym:{n:'Спортзал',cat:'gym',x:380,y:230,w:200,h:90,door:[480,230],t:'Игровой зал с раздевалками. Нужна спортивная форма и сменная обувь.'}
+};
+const CATS=[['cafe','Кафе / Столовая'],['wc','Туалеты'],['lib','Библиотека'],['gym','Спортзал']];
+let cur=null,popen=false;
+const START={n:'Главный вход',t:'Вы у главного входа. Гардероб слева, охрана справа. Коридор ведёт ко всем кабинетам первого этажа.'};
+
+function drawMap(){
+  let h='<rect x="4" y="4" width="592" height="332" rx="14" fill="#fff" stroke="#c9d3e4"/><rect x="10" y="168" width="580" height="44" fill="#f1f4fa"/><text x="330" y="195" class="rt" style="fill:#9aa7c2">коридор</text>';
+  for(const k in PLACES){const p=PLACES[k];h+=`<g style="cursor:pointer" data-k="${k}"><rect class="room" id="r-${k}" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10"/><text class="rt" x="${p.x+p.w/2}" y="${p.y+p.h/2+4}">${p.n.replace(' №',' №')}</text></g>`}
+  h+='<rect x="10" y="230" width="150" height="90" rx="10" fill="#f1f4fa" stroke="#dbe3f0"/><text class="rt" x="85" y="280" style="fill:#9aa7c2">Гардероб</text>';
+  h+='<path id="route" class="route" d=""/>';
+  h+=`<circle class="pulse" cx="${ME.x}" cy="${ME.y}" r="12" fill="#2350f0"/><circle cx="${ME.x}" cy="${ME.y}" r="9" fill="#2350f0" stroke="#fff" stroke-width="3"/>`;
+  h+=`<g transform="translate(${ME.x-34},${ME.y-42})"><rect width="68" height="22" rx="11" fill="#12203d"/><text x="34" y="15" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Вы здесь</text></g>`;
+  $('#map').innerHTML=h;
+  $$('#map g[data-k]').forEach(g=>g.onclick=()=>setDest(g.dataset.k));
+}
+function setDest(k,silent){
+  cur=k;const p=PLACES[k];
+  $('#dest').value=k;
+  $$('.room').forEach(r=>r.classList.remove('hl'));$('#r-'+k).classList.add('hl');
+  const [dx,dy]=p.door;
+  const d=`M${ME.x},${ME.y+34} L${ME.x},${ME.y} L${dx},${ME.y} L${dx},${dy<190?dy-2:dy+8}`;
+  const r=$('#route');r.setAttribute('d',d);r.classList.remove('go');void r.getBoundingClientRect();r.classList.add('go');
+  const m=Math.round((Math.abs(dx-ME.x)+Math.abs(dy-ME.y)+34)/6.5);
+  $('#i-name').textContent=p.n;$('#i-dist').textContent=m+' м';$('#i-min').textContent=Math.max(1,Math.round(m/70*60/60+0.5))+' мин';
+  $$('#cats .chip').forEach(c=>c.classList.toggle('on',PLACES[k].cat===c.dataset.c));
+  setAudio(p.n,p.t,'Пункт назначения');
+  $('#ar-to').textContent=p.n;$('#ar-d').textContent=m+' м';
+  if(!silent)toast('Маршрут до «'+p.n+'» построен');
+}
+function clearRoute(){cur=null;$('#route').setAttribute('d','');$$('.room').forEach(r=>r.classList.remove('hl'));$$('#cats .chip').forEach(c=>c.classList.remove('on'));$('#dest').value='';['#i-name','#i-dist','#i-min'].forEach(s=>$(s).textContent='—');setAudio(START.n,START.t,'Вы здесь');toast('Маршрут сброшен')}
+$('#cats').innerHTML=CATS.map(c=>`<button class="chip" data-c="${c[0]}">${c[1]}</button>`).join('');
+$$('#cats .chip').forEach(b=>b.onclick=()=>{const k=Object.keys(PLACES).find(k=>PLACES[k].cat===b.dataset.c);setDest(k)});
+$('#dest').innerHTML='<option value="">Выберите место…</option>'+Object.keys(PLACES).map(k=>`<option value="${k}">${PLACES[k].n}</option>`).join('');
+$('#dest').onchange=e=>e.target.value?setDest(e.target.value):clearRoute();
+$('#btnClear').onclick=clearRoute;
+$('#btnAR').onclick=()=>{if(!cur){setDest('conf',true);toast('Выбрали «Конференц-зал» для примера')}$('#arModal').classList.remove('hidden')};
+$('#arClose').onclick=()=>$('#arModal').classList.add('hidden');
+$('#arModal').onclick=e=>{if(e.target.id==='arModal')e.target.classList.add('hidden')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#arModal').classList.add('hidden')});
+
+/* ---------- АУДИОГИД ---------- */
+$('#wave').innerHTML=Array.from({length:36},(_,i)=>`<i style="animation-delay:${(i*57%500)/1000}s;animation-duration:${.5+(i*37%60)/100}s"></i>`).join('');
+let tm=null,left=45;
+function stopAudio(){clearInterval(tm);tm=null;left=45;$('#audio').classList.remove('playing');$('#a-btn').textContent='Прослушать аудиогид';$('#a-time').textContent='0:45';$('#a-prog').style.width='0'}
+function setAudio(n,t,tag){stopAudio();$('#a-title').textContent=n;$('#a-text').textContent=t;$('#a-tag').textContent=tag}
+$('#a-btn').onclick=()=>{
+  if(tm){stopAudio();return}
+  $('#audio').classList.add('playing');$('#a-btn').textContent='Пауза';
+  tm=setInterval(()=>{left--;$('#a-time').textContent='0:'+String(left).padStart(2,'0');$('#a-prog').style.width=((45-left)/45*100)+'%';
+    if(left<=0){stopAudio();toast('Аудиогид завершён')}},1000);
+};
+
+/* ---------- РОЛИ ---------- */
+let role='guest',user=null;
+const NAMES={student:['Анна Петрова','Иван Сидоров','Мария Козлова','Артём Орлов'],head:['Дарья Волкова'],teacher:['Елена Сергеевна Миронова']};
+const RN={guest:'Гость',student:'Ученик',head:'Староста',teacher:'Учитель'};
+function fillNames(){const l=NAMES[role]||[];$('#who').innerHTML=l.length?l.map(n=>`<option>${n}</option>`).join(''):'<option value="">Для входа выберите роль ученика, старосты или учителя</option>'}
+$$('#roles button').forEach(b=>b.onclick=()=>{
+  $$('#roles button').forEach(x=>x.classList.toggle('on',x===b));
+  role=b.dataset.role;user=null;fillNames();showPortal();
+  toast('Роль: '+b.textContent)
+});
+$$('.main button').forEach(b=>b.onclick=()=>{
+  $$('.main button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#sec-nav').classList.toggle('hidden',b.dataset.sec!=='nav');
+  $('#sec-portal').classList.toggle('hidden',b.dataset.sec!=='portal');
+});
+
+/* ---------- ВХОД ---------- */
+$('#loginForm').onsubmit=e=>{
+  e.preventDefault();const err=$('#loginErr');err.textContent='';
+  if(role==='guest'||!$('#who').value){err.textContent='Гостям вход закрыт. Выберите роль ученика, старосты или учителя вверху.';return}
+  if($('#code').value.trim().toUpperCase()!=='ФМ-10.2026'){err.textContent='Такого кода класса нет. Попробуйте ФМ-10.2026.';return}
+  if(!$('#pass').value){err.textContent='Введите пароль.';return}
+  user=$('#who').value;$('#pass').value='';showPortal();toast('Добро пожаловать, '+user.split(' ')[0]+'!');
+};
+$('#logout').onclick=()=>{user=null;showPortal();toast('Вы вышли из портала')};
+function showPortal(){
+  const on=!!user;$('#login').classList.toggle('hidden',on);$('#app').classList.toggle('hidden',!on);
+  if(!on)return;
+  $('#hello').textContent='Привет, '+user.split(' ')[0]+'!';
+  $('#who-line').textContent=RN[role]+' · класс 10-ФМ';
+  $('#teacherBar').classList.toggle('hidden',role!=='teacher');
+  if(role!=='teacher')$('#hwForm').classList.add('hidden');
+  $('#annForm').classList.toggle('hidden',!(role==='head'||role==='teacher'));
+  renderHW();
+}
+
+/* ---------- ВКЛАДКИ ПОРТАЛА ---------- */
+$$('#ptabs button').forEach(b=>b.onclick=()=>{
+  $$('#ptabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['hw','notes','news','stats'].forEach(p=>$('#p-'+p).classList.toggle('hidden',p!==b.dataset.p));
+});
+
+/* ---------- ДЗ ---------- */
+const today=new Date();today.setHours(0,0,0,0);
+const addD=n=>{const d=new Date(today);d.setDate(d.getDate()+n);return d};
+const fmt=d=>d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+let HW=[
+ {s:'Алгебра',t:'§12: квадратные неравенства, №245–252',due:addD(2),done:false,c:''},
+ {s:'Физика',t:'Лабораторная №3: измерение ускорения свободного падения',due:addD(4),done:false,c:''},
+ {s:'Литература',t:'Прочитать главы 5–7 «Отцов и детей», подготовить тезисы',due:addD(6),done:true,c:'Тезисы на 1 странице'}
+];
+function renderHW(){
+  $('#hwList').innerHTML=HW.map((h,i)=>`<div class="card hw">
+    <div class="top"><h2 style="margin:0">${esc(h.s)}</h2><span class="tag ${h.done?'ok':'warn'}">${h.done?'Сдано':'Не сдано'}</span></div>
+    <p>${esc(h.t)}</p><small style="color:var(--mute)">Срок: ${fmt(h.due)}</small>
+    ${h.c?`<div class="cm"><b>Ваш комментарий:</b> ${esc(h.c)}</div>`:''}
+    ${role==='teacher'?'':h.done?'<button class="btn" disabled>✓ Сдано</button>':`<button class="btn" data-open="${i}">Сдать ДЗ</button>
+    <form class="sub hidden" data-f="${i}"><label>Файл или фото работы</label><input type="file" accept="image/*,.pdf,.doc,.docx"><label>Комментарий учителю</label><input placeholder="Необязательно"><div class="row" style="margin-top:10px"><button class="btn sm">Отправить</button><button type="button" class="btn ghost sm" data-x="${i}">Отмена</button></div></form>`}
+  </div>`).join('');
+  $$('[data-open]').forEach(b=>b.onclick=()=>$(`[data-f="${b.dataset.open}"]`).classList.toggle('hidden'));
+  $$('[data-x]').forEach(b=>b.onclick=()=>$(`[data-f="${b.dataset.x}"]`).classList.add('hidden'));
+  $$('form[data-f]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const i=+f.dataset.f,ins=f.querySelectorAll('input');
+    if(!ins[0].files.length){toast('Прикрепите файл или фото работы');return}
+    HW[i].done=true;HW[i].c=ins[1].value;renderHW();updStats();toast('Работа по предмету «'+HW[i].s+'» сдана')});
+}
+$('#newHw').onclick=()=>$('#hwForm').classList.toggle('hidden');
+$('#hwCancel').onclick=()=>$('#hwForm').classList.add('hidden');
+$('#hwForm').onsubmit=e=>{e.preventDefault();
+  HW.unshift({s:$('#hs').value,t:$('#ht').value,due:new Date($('#hd').value),done:false,c:''});
+  $('#ht').value='';$('#hwForm').classList.add('hidden');renderHW();updStats();toast('ДЗ опубликовано для класса')};
+
+/* ---------- КОНСПЕКТЫ ---------- */
+const NOTES=[
+ {t:'Квадратные неравенства — шпаргалка',a:'Анна Петрова',s:'Алгебра',l:14,liked:false,cm:[['Иван','Спасибо, всё понятно!']]},
+ {t:'Законы Ньютона с примерами',a:'Артём Орлов',s:'Физика',l:22,liked:false,cm:[['Мария','Добавь про третий закон, пожалуйста']]},
+ {t:'Образ Базарова: цитатный план',a:'Мария Козлова',s:'Литература',l:9,liked:false,cm:[]}
+];
+function renderNotes(){
+  $('#noteList').innerHTML=NOTES.map((n,i)=>`<div class="card hw">
+    <div class="top"><h2 style="margin:0;font-size:1rem">${esc(n.t)}</h2><span class="tag">${n.s}</span></div>
+    <p>Автор: ${esc(n.a)}</p>
+    <div class="row"><button class="btn sm ${n.liked?'':'sec'}" data-like="${i}">${n.liked?'♥ Полезно':'♡ Полезно'} · ${n.l}</button></div>
+    <div>${n.cm.map(c=>`<div class="cm"><b>${esc(c[0])}:</b> ${esc(c[1])}</div>`).join('')}</div>
+    <form class="row" data-cm="${i}"><input placeholder="Комментарий" required><button class="btn sm ghost">Отправить</button></form>
+  </div>`).join('');
+  $$('[data-like]').forEach(b=>b.onclick=()=>{const n=NOTES[b.dataset.like];n.liked=!n.liked;n.l+=n.liked?1:-1;renderNotes();updStats();if(n.liked)toast('Отмечено как полезное')});
+  $$('form[data-cm]').forEach(f=>f.onsubmit=e=>{e.preventDefault();NOTES[f.dataset.cm].cm.push([(user||'Вы').split(' ')[0],f.querySelector('input').value]);renderNotes();toast('Комментарий добавлен')});
+}
+
+/* ---------- ОБЪЯВЛЕНИЯ / РАСПИСАНИЕ ---------- */
+let ANN=[
+ {t:'В пятницу контрольная по алгебре. Возьмите калькуляторы.',w:'Классный руководитель',imp:true},
+ {t:'Сбор на экскурсию в технопарк — до среды у старосты.',w:'Староста',imp:false}
+];
+function renderAnn(){$('#annList').innerHTML=ANN.map(a=>`<div class="ann ${a.imp?'imp':''}">${esc(a.t)}<br><small>${esc(a.w)}</small></div>`).join('')}
+$('#annForm').onsubmit=e=>{e.preventDefault();ANN.unshift({t:$('#annIn').value,w:role==='teacher'?'Классный руководитель':'Староста',imp:false});$('#annIn').value='';renderAnn();toast('Объявление опубликовано')};
+const SCH={
+ 'Пн':[['Алгебра','204'],['Физика','Лаб.'],['Литература','112'],['Информатика','301'],['Физкультура','Спортзал']],
+ 'Вт':[['Физика','204'],['Алгебра','204'],['Английский','208'],['История','115'],['Геометрия','204']],
+ 'Ср':[['Литература','112'],['Химия','210'],['Алгебра','204'],['Информатика','301'],['Классный час','204']],
+ 'Чт':[['Геометрия','204'],['Физика','Лаб.'],['Английский','208'],['Физкультура','Спортзал'],['Биология','212']],
+ 'Пт':[['Алгебра','204'],['История','115'],['Литература','112'],['Физика','204']]
+};
+const TIMES=['8:30','9:25','10:30','11:25','12:30'];
+const DN=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+let day=SCH[DN[today.getDay()]]?DN[today.getDay()]:'Пн';
+function renderSched(){
+  $('#days').innerHTML=Object.keys(SCH).map(d=>`<button class="chip ${d===day?'on':''}" data-d="${d}">${d}</button>`).join('');
+  $('#sched').innerHTML=SCH[day].map((l,i)=>`<div class="day"><span class="n">${i+1}</span><b>${l[0]}</b><span class="r">${TIMES[i]} · каб. ${l[1]}</span></div>`).join('');
+  $$('[data-d]').forEach(b=>b.onclick=()=>{day=b.dataset.d;renderSched()});
+}
+
+/* ---------- СТАТИСТИКА / ДЕДЛАЙНЫ ---------- */
+const BASE={total:28*3,ontime:63};
+function updStats(){
+  const mine=HW.filter(h=>h.done).length,tot=HW.length;
+  const p=Math.min(100,Math.round((BASE.ontime+mine)/(BASE.total+tot)*100));
+  $('#ring').style.setProperty('--p',p);$('#ringN').textContent=p+'%';
+  $('#ringS').textContent='Ваш класс: '+(BASE.ontime+mine)+' из '+(BASE.total+tot)+' работ';
+  const top=[...NOTES].sort((a,b)=>b.l-a.l)[0];$('#topNote').textContent=top.t+' · '+top.l+' лайков';
+}
+const DL=[['Контрольная по алгебре',3,'warn'],['Лабораторная по физике',4,''],['Тезисы по литературе',6,''],['Проект по информатике',12,'']];
+$('#dlList').innerHTML=DL.map(d=>{const dt=addD(d[1]);return `<div class="dl"><div class="date">${dt.getDate()}<small>${dt.toLocaleDateString('ru-RU',{month:'short'})}</small></div><div><b>${d[0]}</b><br><small style="color:var(--mute)">через ${d[1]} дн.</small></div>${d[2]?'<span class="tag warn" style="margin-left:auto">Скоро</span>':''}</div>`}).join('');
+
+/* ---------- СТАРТ ---------- */
+drawMap();setAudio(START.n,START.t,'Вы здесь');fillNames();renderNotes();renderAnn();renderSched();updStats();
+</script>
+</body>
+</html>
